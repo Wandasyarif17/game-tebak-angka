@@ -1,0 +1,17 @@
+{
+  "name": "game-tebak-angka",
+  "version": "1.0.0",
+  "description": "Game Tebak Angka \u2014 tebak angka rahasia 1-100. Dibuat sambil belajar HTML, CSS, dan JavaScript.",
+  "main": "sw.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2"
+  },
+  "private": true
+}
