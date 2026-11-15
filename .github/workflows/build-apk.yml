@@ -27,6 +27,8 @@ jobs:
         run: npm ci
       - name: Siapkan folder web
         run: mkdir -p www && cp index.html manifest.json sw.js icon.svg www/
+      - name: Pasang paket Android Capacitor
+        run: npm install @capacitor/android@^8.0.0
       - name: Tambah platform Android
         run: npx cap add android
       - name: Sinkronkan aset web
