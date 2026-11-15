@@ -1,0 +1,19 @@
+{
+  "name": "Game Tebak Angka",
+  "short_name": "Tebak Angka",
+  "description": "Tebak angka rahasia 1-100. Dibuat sambil belajar HTML, CSS, dan JavaScript.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1411",
+  "theme_color": "#0d7a5c",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

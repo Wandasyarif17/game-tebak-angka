@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#0d7a5c" />
+    <title>Game Tebak Angka — File Lengkap</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #eef2ee;
+        --panel: #ffffff;
+        --panel-2: #e3eae4;
+        --ink: #15211b;
+        --ink-soft: #4c5d54;
+        --line: #cfd9d1;
+        --accent: #0d7a5c;
+        --accent-ink: #ffffff;
+        --accent-soft: #d9efe6;
+        --amber: #b97a16;
+        --amber-soft: #f7ead0;
+        --red: #b3372c;
+        --red-soft: #f8dedb;
+        --code-bg: #12211b;
+        --code-ink: #d7e8de;
+        --radius: 14px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1411;
+          --panel: #16211b;
+          --panel-2: #1d2c24;
+          --ink: #e8f1ea;
+          --ink-soft: #9db3a6;
+          --line: #2c4036;
+          --accent: #2fbf8f;
+          --accent-ink: #08130e;
+          --accent-soft: #173b2e;
+          --amber: #e5a83e;
+          --amber-soft: #3a2d12;
+          --red: #ef7d6f;
+          --red-soft: #40201c;
+          --code-bg: #0a120e;
+          --code-ink: #cfe4d6;
+        }
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+      .wrap { max-width: 880px; margin: 0 auto; padding: 20px 16px 56px; }
+      h1 { font-size: clamp(1.7rem, 5vw, 2.4rem); font-weight: 800; letter-spacing: -0.02em; margin: 8px 0 6px; }
+      .lead { color: var(--ink-soft); margin: 0 0 22px; max-width: 60ch; }
+      h2 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 6px; }
+      .section-sub { color: var(--ink-soft); margin: 0 0 16px; font-size: 0.95rem; }
+      section { margin-top: 40px; }
+      code, .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+      /* ---------- Game card ---------- */
+      .game {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 22px 20px 24px;
+      }
+      .levels { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+      .level-btn {
+        min-height: 44px; padding: 8px 16px;
+        border-radius: 999px; border: 1.5px solid var(--line);
+        background: var(--panel-2); color: var(--ink);
+        font: inherit; font-weight: 600; font-size: 0.92rem; cursor: pointer;
+      }
+      .level-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+      .level-btn:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+      .secret-display {
+        text-align: center; padding: 18px 10px 8px;
+      }
+      .secret-display .big {
+        font-family: "JetBrains Mono", monospace;
+        font-size: clamp(3.2rem, 14vw, 4.6rem); font-weight: 700; line-height: 1;
+        letter-spacing: 0.04em;
+      }
+      .secret-display .caption { color: var(--ink-soft); font-size: 0.92rem; margin-top: 8px; }
+      .secret-display.won .big { color: var(--accent); }
+
+      .rangebar { margin: 18px 2px 4px; }
+      .rangebar .track {
+        position: relative; height: 12px; border-radius: 999px;
+        background: var(--panel-2); border: 1px solid var(--line); overflow: hidden;
+      }
+      .rangebar .alive {
+        position: absolute; top: 0; bottom: 0; background: var(--accent); opacity: 0.75;
+        transition: left .35s ease, width .35s ease;
+      }
+      .rangebar .labels { display: flex; justify-content: space-between; font-family: "JetBrains Mono", monospace; font-size: 0.8rem; color: var(--ink-soft); margin-top: 6px; }
+      .rangebar .labels b { color: var(--ink); font-weight: 700; }
+
+      .feedback {
+        margin: 16px 0 4px; padding: 14px 16px; border-radius: var(--radius);
+        background: var(--accent-soft); font-weight: 600; min-height: 54px;
+        display: flex; align-items: center; gap: 10px;
+      }
+      .feedback.hot { background: var(--amber-soft); }
+      .feedback.win { background: var(--accent); color: var(--accent-ink); }
+      .feedback.err { background: var(--red-soft); color: var(--red); }
+      .feedback .temp {
+        margin-left: auto; flex: none; font-family: "JetBrains Mono", monospace;
+        font-size: 0.8rem; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+        background: var(--panel); color: var(--ink); border: 1px solid var(--line);
+      }
+      .feedback.win .temp { background: transparent; color: inherit; border-color: currentColor; }
+
+      .guess-row { display: flex; gap: 10px; margin-top: 14px; }
+      .guess-row input {
+        flex: 1 1 auto; min-width: 0; min-height: 52px;
+        font: inherit; font-size: 1.15rem; font-weight: 700; text-align: center;
+        font-family: "JetBrains Mono", monospace;
+        border: 1.5px solid var(--line); border-radius: var(--radius);
+        background: var(--bg); color: var(--ink); padding: 8px 10px;
+      }
+      .btn {
+        min-height: 52px; padding: 10px 22px; border: none; border-radius: var(--radius);
+        font: inherit; font-weight: 800; font-size: 1rem; cursor: pointer;
+        background: var(--accent); color: var(--accent-ink);
+      }
+      .btn:active { transform: translateY(1px); }
+      .btn.secondary { background: var(--panel-2); color: var(--ink); border: 1.5px solid var(--line); }
+      .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+      .stats { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 16px; color: var(--ink-soft); font-size: 0.92rem; }
+      .stats b { color: var(--ink); font-family: "JetBrains Mono", monospace; }
+      .again-row { margin-top: 14px; display: none; }
+      .again-row.show { display: block; }
+
+      .history { margin-top: 18px; }
+      .history .h-title { font-size: 0.85rem; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+      .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+      .chip {
+        font-family: "JetBrains Mono", monospace; font-size: 0.88rem; font-weight: 600;
+        padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2);
+      }
+      .chip small { font-weight: 400; opacity: 0.75; margin-left: 4px; }
+      .chip.hit { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+      .history .empty { color: var(--ink-soft); font-size: 0.9rem; }
+
+      /* ---------- How it works ---------- */
+      .roles { display: grid; gap: 12px; }
+      @media (min-width: 640px) { .roles { grid-template-columns: repeat(3, 1fr); } }
+      .role {
+        background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px;
+      }
+      .role .tag {
+        display: inline-block; font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 0.85rem;
+        padding: 3px 10px; border-radius: 6px; margin-bottom: 10px;
+      }
+      .tag-html { background: #f6ddd3; color: #8f3418; }
+      .tag-css { background: #d3e4f6; color: #17457f; }
+      .tag-js { background: #f6ecc0; color: #6d5410; }
+      @media (prefers-color-scheme: dark) {
+        .tag-html { background: #46241a; color: #f0a183; }
+        .tag-css { background: #1a2f47; color: #8dbdf0; }
+        .tag-js { background: #423712; color: #ecd97e; }
+      }
+      .role p { margin: 0; font-size: 0.93rem; color: var(--ink-soft); }
+      .role p b { color: var(--ink); }
+
+      .steps { margin: 18px 0 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 10px; }
+      .steps li {
+        counter-increment: step; background: var(--panel); border: 1px solid var(--line);
+        border-radius: var(--radius); padding: 14px 16px 14px 52px; position: relative; font-size: 0.95rem;
+      }
+      .steps li::before {
+        content: counter(step); position: absolute; left: 14px; top: 12px;
+        width: 26px; height: 26px; border-radius: 50%;
+        background: var(--accent); color: var(--accent-ink);
+        font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 0.85rem;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .steps li b { display: block; margin-bottom: 2px; }
+      .steps li span { color: var(--ink-soft); }
+      .steps code { background: var(--panel-2); padding: 1px 6px; border-radius: 5px; font-size: 0.85em; }
+
+      /* ---------- Code viewer ---------- */
+      .codebox { border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: var(--code-bg); }
+      .code-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px 10px 0; }
+      .code-tab {
+        min-height: 40px; padding: 8px 16px; border: none; border-radius: 9px 9px 0 0;
+        background: transparent; color: #8fae9c; font: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+        font-family: "JetBrains Mono", monospace;
+      }
+      .code-tab[aria-selected="true"] { background: rgba(255,255,255,0.07); color: #fff; }
+      .code-actions { margin-left: auto; padding-bottom: 8px; }
+      .copy-btn {
+        min-height: 40px; padding: 8px 16px; border-radius: 9px; cursor: pointer;
+        border: 1px solid rgba(255,255,255,0.25); background: transparent; color: #e6f2ea;
+        font: inherit; font-weight: 600; font-size: 0.88rem;
+      }
+      .codebox pre {
+        margin: 0; padding: 16px; overflow-x: auto;
+        background: rgba(255,255,255,0.07);
+      }
+      .codebox pre code {
+        font-family: "JetBrains Mono", monospace; font-size: 0.8rem; line-height: 1.65;
+        color: var(--code-ink); white-space: pre;
+      }
+      .tok-k { color: #7ee0b8; font-weight: 600; }
+      .tok-s { color: #f2c879; }
+      .tok-c { color: #7d968a; font-style: italic; }
+      .tok-n { color: #9fd0f5; }
+      .tok-t { color: #f0a183; }
+      .code-note { padding: 12px 16px; font-size: 0.9rem; color: #a9c4b4; border-top: 1px solid rgba(255,255,255,0.1); }
+      .code-note b { color: #e6f2ea; }
+
+      .cheat { display: grid; gap: 10px; }
+      @media (min-width: 640px) { .cheat { grid-template-columns: 1fr 1fr; } }
+      .cheat-item { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+      .cheat-item code { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 5px; word-break: break-word; }
+      .cheat-item p { margin: 0; font-size: 0.92rem; color: var(--ink-soft); }
+
+      /* ---------- Kotak file lengkap ---------- */
+      .lengkap {
+        background: var(--accent-soft); border: 1.5px solid var(--accent);
+        border-radius: 20px; padding: 20px; margin-bottom: 22px;
+      }
+      .lengkap h2 { margin-top: 0; }
+      .lengkap p { margin: 0 0 10px; font-size: 0.95rem; }
+      .kerangka {
+        margin: 12px 0; padding: 14px 16px; border-radius: var(--radius);
+        background: var(--code-bg); color: var(--code-ink); overflow-x: auto;
+      }
+      .kerangka code { font-size: 0.82rem; line-height: 1.65; white-space: pre; }
+      .kerangka .hl-css { color: #8dbdf0; font-weight: 700; }
+      .kerangka .hl-js { color: #ecd97e; font-weight: 700; }
+      .kerangka .hl-html { color: #f0a183; font-weight: 700; }
+      .btn-besar {
+        width: 100%; min-height: 56px; font-size: 1.05rem; margin-top: 6px;
+      }
+      .salin-status { text-align: center; font-size: 0.9rem; font-weight: 700; margin-top: 8px; min-height: 22px; }
+      .langkah-paste { margin: 10px 0 0; padding-left: 20px; font-size: 0.95rem; }
+      .langkah-paste li { margin-bottom: 5px; }
+
+      footer { margin-top: 44px; color: var(--ink-soft); font-size: 0.88rem; border-top: 1px solid var(--line); padding-top: 16px; }
+      @media (prefers-reduced-motion: reduce) {
+        .rangebar .alive { transition: none; }
+        .btn:active { transform: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Game Tebak Angka — File Lengkap</h1>
+      <p class="lead">Komputer menyembunyikan satu angka. Tugasmu menebaknya — setiap tebakan dikasih petunjuk <b>terlalu besar</b> atau <b>terlalu kecil</b>, plus suhu kedekatanmu. Di bawah game-nya ada kode aslinya, jadi habis main kamu bisa lihat persis cara kerjanya.</p>
+
+      <!-- ================= FILE LENGKAP: PENJELASAN ================= -->
+      <div class="lengkap" id="kotakLengkap">
+        <h2>✅ Ini file lengkapnya — tinggal paste SEKALI</h2>
+        <p>Bro, file ini <b>sudah digabung jadi satu</b>: HTML + CSS + JavaScript ada di dalam <b>satu file yang sama</b>. Jadi kamu <b>nggak perlu paste CSS dan JavaScript satu-satu lagi</b>. Cukup salin file ini sekali, tempel ke editor, simpan sebagai <code>index.html</code>, terus buka — game-nya langsung jalan.</p>
+        <p><b>Di mana CSS dan JavaScript ditaruh?</b> Ini rumusnya, lihat kerangkanya:</p>
+        <div class="kerangka"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;title&gt;Game Tebak Angka&lt;/title&gt;
+  <span class="hl-css">&lt;style&gt;
+    ... CSS ditempel DI SINI ...
+  &lt;/style&gt;</span>
+&lt;/head&gt;
+&lt;body&gt;
+  <span class="hl-html">... HTML game-nya DI SINI ...</span>
+  <span class="hl-js">&lt;script&gt;
+    ... JavaScript ditempel DI SINI ...
+  &lt;/script&gt;</span>
+&lt;/body&gt;
+&lt;/html&gt;</code></div>
+        <p>Ingat aja dua baris ini: <b>CSS di dalam <code>&lt;style&gt;</code> di bagian <code>&lt;head&gt;</code></b>, dan <b>JavaScript di dalam <code>&lt;script&gt;</code> tepat sebelum <code>&lt;/body&gt;</code></b>. Di file ini, dua-duanya <b>sudah saya taruh di tempatnya</b> — kamu nggak usah mindahin apa-apa.</p>
+        <button type="button" class="btn btn-besar" id="copyFullBtn">📋 Salin Kode Lengkap (Satu File)</button>
+        <div class="salin-status" id="copyFullStatus" role="status" aria-live="polite"></div>
+        <ol class="langkah-paste">
+          <li>Tekan tombol <b>Salin Kode Lengkap</b> di atas.</li>
+          <li>Buka editor kamu, buat file baru, lalu <b>paste sekali</b> — semuanya ikut, termasuk <code>&lt;!DOCTYPE html&gt;</code>, <code>&lt;style&gt;</code>, dan <code>&lt;script&gt;</code>.</li>
+          <li>Simpan dengan nama <code>index.html</code>, lalu buka file itu di browser. Selesai!</li>
+        </ol>
+      </div>
+
+      <!-- ================= GAME ================= -->
+      <div class="game" id="game">
+        <div class="levels" role="group" aria-label="Pilih level">
+          <button type="button" class="level-btn" data-max="50" aria-pressed="false">Mudah · 1–50</button>
+          <button type="button" class="level-btn" data-max="100" aria-pressed="true">Sedang · 1–100</button>
+          <button type="button" class="level-btn" data-max="1000" aria-pressed="false">Sulit · 1–1000</button>
+        </div>
+
+        <div class="secret-display" id="secretDisplay">
+          <div class="big" id="bigDisplay">?</div>
+          <div class="caption" id="rangeCaption">Angka rahasia antara 1 dan 100</div>
+        </div>
+
+        <div class="rangebar" aria-hidden="true">
+          <div class="track"><div class="alive" id="aliveBar" style="left:0%;width:100%"></div></div>
+          <div class="labels"><span>Masih mungkin: <b id="aliveMin">1</b></span><span><b id="aliveMax">100</b></span></div>
+        </div>
+
+        <div class="feedback" id="feedback" role="status" aria-live="polite">
+          <span id="feedbackText">Ketik tebakan pertamamu, lalu tekan Tebak.</span>
+          <span class="temp" id="tempBadge" hidden></span>
+        </div>
+
+        <form class="guess-row" id="guessForm">
+          <input id="guessInput" type="number" inputmode="numeric" min="1" max="100" placeholder="Tebakanmu…" aria-label="Ketik tebakanmu" autocomplete="off" />
+          <button type="submit" class="btn" id="guessBtn">Tebak</button>
+        </form>
+
+        <div class="stats">
+          <span>Percobaan: <b id="statTries">0</b></span>
+          <span>Rekor terbaik level ini: <b id="statBest">—</b></span>
+        </div>
+
+        <div class="again-row" id="againRow">
+          <button type="button" class="btn secondary" id="againBtn" style="width:100%">Main Lagi — Acak Angka Baru</button>
+        </div>
+
+        <div class="history">
+          <div class="h-title">Riwayat tebakan</div>
+          <div class="chips" id="chips"><span class="empty">Belum ada tebakan.</span></div>
+        </div>
+      </div>
+
+      <!-- ================= CARA KERJA ================= -->
+      <section>
+        <h2>Cara kerja game ini</h2>
+        <p class="section-sub">Game sekecil ini pun dibangun dari tiga bahan yang sama seperti website mana pun:</p>
+        <div class="roles">
+          <div class="role">
+            <span class="tag tag-html">HTML</span>
+            <p><b>Kerangkanya.</b> Kotak input, tombol “Tebak”, tempat petunjuk muncul — semua ditulis pakai tag HTML.</p>
+          </div>
+          <div class="role">
+            <span class="tag tag-css">CSS</span>
+            <p><b>Tampilannya.</b> Warna hijau, sudut membulat, ukuran huruf — CSS yang mengatur game ini kelihatan seperti ini.</p>
+          </div>
+          <div class="role">
+            <span class="tag tag-js">JavaScript</span>
+            <p><b>Otaknya.</b> Yang mengacak angka rahasia, mengecek tebakanmu benar atau salah, dan menghitung percobaan.</p>
+          </div>
+        </div>
+
+        <ol class="steps">
+          <li><b>Komputer mengacak angka</b><span>Saat game mulai, JavaScript menjalankan <code>Math.random()</code> untuk memilih satu angka rahasia, lalu menyimpannya di variabel.</span></li>
+          <li><b>Kamu menebak</b><span>Tombol “Tebak” memicu sebuah <code>function</code> yang membaca angka dari kotak input.</span></li>
+          <li><b>JavaScript membandingkan</b><span>Pakai <code>if / else</code>: kalau sama persis → menang; kalau tebakanmu lebih kecil → petunjuk “terlalu kecil”; kalau lebih besar → “terlalu besar”.</span></li>
+          <li><b>Skor dihitung</b><span>Setiap tebakan menambah variabel percobaan sebanyak 1 (<code>percobaan++</code>). Makin sedikit percobaan, makin bagus skormu.</span></li>
+        </ol>
+      </section>
+
+      <!-- ================= KODE ================= -->
+      <section>
+        <h2>Lihat kodenya</h2>
+        <p class="section-sub">Ini kode game di atas, disederhanakan sedikit biar gampang dibaca buat belajar per bagian. Kalau mau pakai game-nya beneran, jangan salin per tab — pakai tombol <b>Salin Kode Lengkap</b> di paling atas, itu yang menyalin satu file utuhnya sekali paste.</p>
+
+        <div class="codebox">
+          <div class="code-tabs" role="tablist" aria-label="Pilih bahasa kode">
+            <button type="button" class="code-tab" role="tab" data-tab="html" aria-selected="false">HTML</button>
+            <button type="button" class="code-tab" role="tab" data-tab="css" aria-selected="false">CSS</button>
+            <button type="button" class="code-tab" role="tab" data-tab="js" aria-selected="true">JavaScript</button>
+            <div class="code-actions"><button type="button" class="copy-btn" id="copyBtn">Salin kode</button></div>
+          </div>
+          <pre><code id="codeView"></code></pre>
+          <div class="code-note" id="codeNote"></div>
+        </div>
+      </section>
+
+      <!-- ================= RUMUS ================= -->
+      <section>
+        <h2>Rumus JavaScript yang dipakai</h2>
+        <p class="section-sub">Empat baris ini yang bikin game-nya “hidup”. Sisanya cuma pengulangan pola yang sama.</p>
+        <div class="cheat">
+          <div class="cheat-item">
+            <code>Math.floor(Math.random() * 100) + 1</code>
+            <p>Mengacak angka bulat dari 1 sampai 100. <code>Math.random()</code> memberi angka acak 0–0,99…, dikali 100, dibulatkan ke bawah, lalu ditambah 1.</p>
+          </div>
+          <div class="cheat-item">
+            <code>if (tebakan === rahasia) { … }</code>
+            <p>Membandingkan dua angka. Tanda <code>===</code> artinya “sama persis?”. Kalau benar, blok di dalam kurung kurawal yang jalan.</p>
+          </div>
+          <div class="cheat-item">
+            <code>else if (tebakan &lt; rahasia) { … }</code>
+            <p>Cabang kedua: kalau tebakan lebih kecil dari angka rahasia, tampilkan petunjuk “terlalu kecil”. Kalau tidak juga, jatuh ke <code>else</code> terakhir.</p>
+          </div>
+          <div class="cheat-item">
+            <code>tombol.addEventListener("click", cek)</code>
+            <p>Menyuruh browser: “kalau tombol ini diklik, jalankan fungsi <code>cek</code>”. Inilah yang menghubungkan klik kamu ke logika game.</p>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        Tantangan buat latihan: salin kode lengkapnya pakai tombol di atas, tempel ke editor, lalu ubah angka <code>100</code>-nya jadi <code>10</code> — game-nya langsung berubah jadi tebak angka 1–10. Begitulah rasanya ngoding: ubah satu angka, perilaku program ikut berubah.
+      </footer>
+    </div>
+
+    <script>
+      // ============ LOGIKA GAME ============
+      var batas = 100;              // angka terbesar di level ini
+      var rahasia = 0;              // angka yang harus ditebak
+      var percobaan = 0;            // sudah berapa kali menebak
+      var minHidup = 1, maxHidup = 100; // rentang yang masih mungkin
+      var selesai = false;
+      var rekor = {};               // rekor per level, khusus sesi ini
+
+      var input = document.getElementById('guessInput');
+      var form = document.getElementById('guessForm');
+      var feedback = document.getElementById('feedback');
+      var feedbackText = document.getElementById('feedbackText');
+      var tempBadge = document.getElementById('tempBadge');
+      var bigDisplay = document.getElementById('bigDisplay');
+      var secretDisplay = document.getElementById('secretDisplay');
+      var rangeCaption = document.getElementById('rangeCaption');
+      var statTries = document.getElementById('statTries');
+      var statBest = document.getElementById('statBest');
+      var chips = document.getElementById('chips');
+      var aliveBar = document.getElementById('aliveBar');
+      var aliveMin = document.getElementById('aliveMin');
+      var aliveMax = document.getElementById('aliveMax');
+      var againRow = document.getElementById('againRow');
+      var guessBtn = document.getElementById('guessBtn');
+
+      function acakAngka() {
+        // Math.random() -> 0 s.d. 0,99... ; jadikan 1 s.d. batas
+        return Math.floor(Math.random() * batas) + 1;
+      }
+
+      function updateBar() {
+        var left = ((minHidup - 1) / batas) * 100;
+        var width = ((maxHidup - minHidup + 1) / batas) * 100;
+        aliveBar.style.left = left + '%';
+        aliveBar.style.width = width + '%';
+        aliveMin.textContent = minHidup;
+        aliveMax.textContent = maxHidup;
+      }
+
+      function updateRekor() {
+        statBest.textContent = rekor[batas] ? rekor[batas] + 'x tebakan' : '—';
+      }
+
+      function mulaiBaru() {
+        rahasia = acakAngka();
+        percobaan = 0;
+        minHidup = 1;
+        maxHidup = batas;
+        selesai = false;
+        input.max = batas;
+        input.value = '';
+        input.disabled = false;
+        guessBtn.disabled = false;
+        bigDisplay.textContent = '?';
+        secretDisplay.classList.remove('won');
+        rangeCaption.textContent = 'Angka rahasia antara 1 dan ' + batas;
+        feedback.className = 'feedback';
+        feedbackText.textContent = 'Ketik tebakan pertamamu, lalu tekan Tebak.';
+        tempBadge.hidden = true;
+        statTries.textContent = '0';
+        chips.innerHTML = '<span class="empty">Belum ada tebakan.</span>';
+        againRow.classList.remove('show');
+        updateBar();
+        updateRekor();
+        input.focus();
+      }
+
+      function suhu(tebakan) {
+        var jarak = Math.abs(tebakan - rahasia);
+        var skala = Math.max(10, batas / 10);
+        if (jarak <= skala * 0.5) return 'PANAS BANGET';
+        if (jarak <= skala * 1.5) return 'HANGAT';
+        if (jarak <= skala * 4) return 'LUMAYAN';
+        return 'DINGIN';
+      }
+
+      function tambahChip(tebakan, arah, kena) {
+        if (percobaan === 1) chips.innerHTML = '';
+        var chip = document.createElement('span');
+        chip.className = 'chip' + (kena ? ' hit' : '');
+        chip.innerHTML = tebakan + '<small>' + arah + '</small>';
+        chips.appendChild(chip);
+      }
+
+      function cekTebakan(e) {
+        e.preventDefault();
+        if (selesai) return;
+        var tebakan = Number(input.value);
+
+        feedback.classList.remove('hot', 'win', 'err');
+        if (!input.value || isNaN(tebakan) || tebakan < 1 || tebakan > batas) {
+          feedback.classList.add('err');
+          feedbackText.textContent = 'Isi dulu angka antara 1 dan ' + batas + ' ya.';
+          tempBadge.hidden = true;
+          return;
+        }
+
+        percobaan++;
+        statTries.textContent = percobaan;
+
+        if (tebakan === rahasia) {
+          // MENANG
+          selesai = true;
+          bigDisplay.textContent = rahasia;
+          secretDisplay.classList.add('won');
+          feedback.classList.add('win');
+          feedbackText.textContent = 'BENAR! Angkanya ' + rahasia + '. Kamu menemukannya dalam ' + percobaan + 'x tebakan.';
+          tempBadge.hidden = true;
+          tambahChip(tebakan, '✓', true);
+          if (!rekor[batas] || percobaan < rekor[batas]) rekor[batas] = percobaan;
+          updateRekor();
+          input.disabled = true;
+          guessBtn.disabled = true;
+          againRow.classList.add('show');
+        } else if (tebakan < rahasia) {
+          feedbackText.textContent = 'Terlalu KECIL — angka rahasianya lebih besar dari ' + tebakan + '.';
+          minHidup = Math.max(minHidup, tebakan + 1);
+          tambahChip(tebakan, '↑ kecil', false);
+          var s1 = suhu(tebakan);
+          tempBadge.textContent = s1;
+          tempBadge.hidden = false;
+          if (s1 === 'PANAS BANGET' || s1 === 'HANGAT') feedback.classList.add('hot');
+        } else {
+          feedbackText.textContent = 'Terlalu BESAR — angka rahasianya lebih kecil dari ' + tebakan + '.';
+          maxHidup = Math.min(maxHidup, tebakan - 1);
+          tambahChip(tebakan, '↓ besar', false);
+          var s2 = suhu(tebakan);
+          tempBadge.textContent = s2;
+          tempBadge.hidden = false;
+          if (s2 === 'PANAS BANGET' || s2 === 'HANGAT') feedback.classList.add('hot');
+        }
+        updateBar();
+        input.value = '';
+        if (!selesai) input.focus();
+      }
+
+      form.addEventListener('submit', cekTebakan);
+      document.getElementById('againBtn').addEventListener('click', mulaiBaru);
+
+      var levelBtns = document.querySelectorAll('.level-btn');
+      levelBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          levelBtns.forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+          btn.setAttribute('aria-pressed', 'true');
+          batas = Number(btn.getAttribute('data-max'));
+          mulaiBaru();
+        });
+      });
+
+      mulaiBaru();
+
+      // ============ PENAMPIL KODE ============
+      var KODE = {
+        html: {
+          note: '<b>HTML</b> — perhatikan: cuma ada kotak input, satu tombol, dan tempat petunjuk. Belum ada logika apa pun di sini.',
+          raw:
+'<h1>Game Tebak Angka</h1>\n' +
+'<p>Komputer sudah memilih angka 1–100.\n' +
+'   Coba tebak!</p>\n' +
+'\n' +
+'<input id="kotakTebakan" type="number"\n' +
+'       placeholder="Tebakanmu...">\n' +
+'<button id="tombolTebak">Tebak</button>\n' +
+'\n' +
+'<p id="petunjuk"></p>\n' +
+'<p>Percobaan: <span id="skor">0</span></p>',
+          html:
+'<span class="tok-t">&lt;h1&gt;</span>Game Tebak Angka<span class="tok-t">&lt;/h1&gt;</span>\n' +
+'<span class="tok-t">&lt;p&gt;</span>Komputer sudah memilih angka 1–100.\n' +
+'   Coba tebak!<span class="tok-t">&lt;/p&gt;</span>\n' +
+'\n' +
+'<span class="tok-t">&lt;input</span> <span class="tok-n">id</span>=<span class="tok-s">"kotakTebakan"</span> <span class="tok-n">type</span>=<span class="tok-s">"number"</span>\n' +
+'       <span class="tok-n">placeholder</span>=<span class="tok-s">"Tebakanmu..."</span><span class="tok-t">&gt;</span>\n' +
+'<span class="tok-t">&lt;button</span> <span class="tok-n">id</span>=<span class="tok-s">"tombolTebak"</span><span class="tok-t">&gt;</span>Tebak<span class="tok-t">&lt;/button&gt;</span>\n' +
+'\n' +
+'<span class="tok-t">&lt;p</span> <span class="tok-n">id</span>=<span class="tok-s">"petunjuk"</span><span class="tok-t">&gt;&lt;/p&gt;</span>\n' +
+'<span class="tok-t">&lt;p&gt;</span>Percobaan: <span class="tok-t">&lt;span</span> <span class="tok-n">id</span>=<span class="tok-s">"skor"</span><span class="tok-t">&gt;</span>0<span class="tok-t">&lt;/span&gt;&lt;/p&gt;</span>'
+        },
+        css: {
+          note: '<b>CSS</b> — bagian ini murni soal rupa: warna tombol, sudut membulat, jarak. Hapus CSS dan game tetap jalan, cuma jadi polos.',
+          raw:
+'body {\n' +
+'  font-family: sans-serif;\n' +
+'  text-align: center;\n' +
+'  background: #eef2ee;\n' +
+'}\n' +
+'\n' +
+'button {\n' +
+'  background: #0d7a5c;  /* hijau */\n' +
+'  color: white;\n' +
+'  border: none;\n' +
+'  border-radius: 10px; /* sudut membulat */\n' +
+'  padding: 10px 22px;\n' +
+'}\n' +
+'\n' +
+'#petunjuk {\n' +
+'  font-weight: bold;\n' +
+'  min-height: 24px;\n' +
+'}',
+          html:
+'<span class="tok-t">body</span> {\n' +
+'  <span class="tok-n">font-family</span>: sans-serif;\n' +
+'  <span class="tok-n">text-align</span>: center;\n' +
+'  <span class="tok-n">background</span>: <span class="tok-s">#eef2ee</span>;\n' +
+'}\n' +
+'\n' +
+'<span class="tok-t">button</span> {\n' +
+'  <span class="tok-n">background</span>: <span class="tok-s">#0d7a5c</span>;  <span class="tok-c">/* hijau */</span>\n' +
+'  <span class="tok-n">color</span>: white;\n' +
+'  <span class="tok-n">border</span>: none;\n' +
+'  <span class="tok-n">border-radius</span>: <span class="tok-s">10px</span>; <span class="tok-c">/* sudut membulat */</span>\n' +
+'  <span class="tok-n">padding</span>: <span class="tok-s">10px 22px</span>;\n' +
+'}\n' +
+'\n' +
+'<span class="tok-t">#petunjuk</span> {\n' +
+'  <span class="tok-n">font-weight</span>: bold;\n' +
+'  <span class="tok-n">min-height</span>: <span class="tok-s">24px</span>;\n' +
+'}'
+        },
+        js: {
+          note: '<b>JavaScript</b> — ini otak game-nya, dan isinya persis logika yang jalan di game di atas: acak angka, bandingkan, kasih petunjuk, hitung percobaan.',
+          raw:
+'// 1. Acak angka rahasia 1-100, simpan di variabel\n' +
+'var rahasia = Math.floor(Math.random() * 100) + 1;\n' +
+'var percobaan = 0;\n' +
+'\n' +
+'// 2. Ambil elemen dari HTML pakai id-nya\n' +
+'var tombol = document.getElementById("tombolTebak");\n' +
+'var kotak  = document.getElementById("kotakTebakan");\n' +
+'var petunjuk = document.getElementById("petunjuk");\n' +
+'\n' +
+'// 3. Fungsi yang jalan setiap tombol diklik\n' +
+'function cekTebakan() {\n' +
+'  var tebakan = Number(kotak.value);\n' +
+'  percobaan++;\n' +
+'\n' +
+'  if (tebakan === rahasia) {\n' +
+'    petunjuk.textContent = "BENAR! " +\n' +
+'      percobaan + "x tebakan.";\n' +
+'  } else if (tebakan < rahasia) {\n' +
+'    petunjuk.textContent = "Terlalu kecil!";\n' +
+'  } else {\n' +
+'    petunjuk.textContent = "Terlalu besar!";\n' +
+'  }\n' +
+'}\n' +
+'\n' +
+'// 4. Hubungkan tombol ke fungsi di atas\n' +
+'tombol.addEventListener("click", cekTebakan);',
+          html:
+'<span class="tok-c">// 1. Acak angka rahasia 1-100, simpan di variabel</span>\n' +
+'<span class="tok-k">var</span> rahasia = Math.<span class="tok-n">floor</span>(Math.<span class="tok-n">random</span>() * <span class="tok-s">100</span>) + <span class="tok-s">1</span>;\n' +
+'<span class="tok-k">var</span> percobaan = <span class="tok-s">0</span>;\n' +
+'\n' +
+'<span class="tok-c">// 2. Ambil elemen dari HTML pakai id-nya</span>\n' +
+'<span class="tok-k">var</span> tombol = document.<span class="tok-n">getElementById</span>(<span class="tok-s">"tombolTebak"</span>);\n' +
+'<span class="tok-k">var</span> kotak  = document.<span class="tok-n">getElementById</span>(<span class="tok-s">"kotakTebakan"</span>);\n' +
+'<span class="tok-k">var</span> petunjuk = document.<span class="tok-n">getElementById</span>(<span class="tok-s">"petunjuk"</span>);\n' +
+'\n' +
+'<span class="tok-c">// 3. Fungsi yang jalan setiap tombol diklik</span>\n' +
+'<span class="tok-k">function</span> <span class="tok-n">cekTebakan</span>() {\n' +
+'  <span class="tok-k">var</span> tebakan = <span class="tok-n">Number</span>(kotak.value);\n' +
+'  percobaan++;\n' +
+'\n' +
+'  <span class="tok-k">if</span> (tebakan === rahasia) {\n' +
+'    petunjuk.textContent = <span class="tok-s">"BENAR! "</span> +\n' +
+'      percobaan + <span class="tok-s">"x tebakan."</span>;\n' +
+'  } <span class="tok-k">else if</span> (tebakan &lt; rahasia) {\n' +
+'    petunjuk.textContent = <span class="tok-s">"Terlalu kecil!"</span>;\n' +
+'  } <span class="tok-k">else</span> {\n' +
+'    petunjuk.textContent = <span class="tok-s">"Terlalu besar!"</span>;\n' +
+'  }\n' +
+'}\n' +
+'\n' +
+'<span class="tok-c">// 4. Hubungkan tombol ke fungsi di atas</span>\n' +
+'tombol.<span class="tok-n">addEventListener</span>(<span class="tok-s">"click"</span>, cekTebakan);'
+        }
+      };
+
+      var tabAktif = 'js';
+      var codeView = document.getElementById('codeView');
+      var codeNote = document.getElementById('codeNote');
+      var copyBtn = document.getElementById('copyBtn');
+      var tabs = document.querySelectorAll('.code-tab');
+
+      function tampilKode(nama) {
+        tabAktif = nama;
+        codeView.innerHTML = KODE[nama].html;
+        codeNote.innerHTML = KODE[nama].note;
+        tabs.forEach(function (t) {
+          t.setAttribute('aria-selected', t.getAttribute('data-tab') === nama ? 'true' : 'false');
+        });
+        copyBtn.textContent = 'Salin kode';
+      }
+      tabs.forEach(function (t) {
+        t.addEventListener('click', function () { tampilKode(t.getAttribute('data-tab')); });
+      });
+      tampilKode('js');
+
+      copyBtn.addEventListener('click', function () {
+        var teks = KODE[tabAktif].raw;
+        function sukses() { copyBtn.textContent = 'Tersalin!'; setTimeout(function () { copyBtn.textContent = 'Salin kode'; }, 2000); }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(teks).then(sukses, function () { salinManual(teks, sukses); });
+        } else {
+          salinManual(teks, sukses);
+        }
+      });
+      function salinManual(teks, sukses) {
+        var ta = document.createElement('textarea');
+        ta.value = teks;
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); sukses(); } catch (e) { copyBtn.textContent = 'Gagal menyalin'; }
+        document.body.removeChild(ta);
+      }
+
+      // ============ SALIN KODE LENGKAP (SATU FILE) ============
+      var copyFullBtn = document.getElementById('copyFullBtn');
+      var copyFullStatus = document.getElementById('copyFullStatus');
+      if (copyFullBtn) {
+        copyFullBtn.addEventListener('click', function () {
+          var kodeLengkap = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+          function suksesFull() {
+            copyFullBtn.textContent = 'Tersalin! Tinggal paste sekali ke editor';
+            if (copyFullStatus) copyFullStatus.textContent = 'Berhasil disalin — sekarang paste ke file index.html kamu ya, bro.';
+            setTimeout(function () { copyFullBtn.textContent = '📋 Salin Kode Lengkap (Satu File)'; }, 3000);
+          }
+          function gagalFull() {
+            if (copyFullStatus) copyFullStatus.textContent = 'Gagal menyalin otomatis — coba tekan lagi ya, bro.';
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(kodeLengkap).then(suksesFull, function () {
+              try { salinManual(kodeLengkap, suksesFull); } catch (e) { gagalFull(); }
+            });
+          } else {
+            try { salinManual(kodeLengkap, suksesFull); } catch (e) { gagalFull(); }
+          }
+        });
+      }
+    </script>
+      <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('./sw.js').catch(function () {});
+        });
+      }
+    </script>
+  </body>
+</html>
